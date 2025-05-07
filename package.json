@@ -1,0 +1,36 @@
+{
+  "name": "bun-server-template",
+  "module": "./src/server/httpServer/index.ts",
+  "version": "0.0.1",
+  "type": "module",
+  "scripts": {
+    "dev": "bun --watch src/server/httpServer/index.ts",
+    "start": "bun src/server/httpServer/index.ts",
+    "worker": "bun ./src/worker.ts",
+    "test-all": "bun run test-unit && bun run test-learning && bun run test-integrate",
+    "test-integrate": "bash ./bash/test-integrate.sh",
+    "test-learning": "bun test learning",
+    "test-unit": "bun test unit",
+    "create-user": "bun ./src/seeders/userSeed.ts"
+  },
+  "devDependencies": {
+    "@types/bun": "^1.1.8",
+    "@typegoose/typegoose": "^12.7.0",
+    "@types/bcryptjs": "^2.4.6",
+    "@types/supertest": "^6.0.2",
+    "@types/winston": "^2.4.4",
+    "prettier": "^3.3.3"
+  },
+  "peerDependencies": {
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "ajv": "^8.17.1",
+    "bcryptjs": "^2.4.3",
+    "dotenv": "^16.4.5",
+    "mongoose": "^8.6.1",
+    "reflect-metadata": "^0.2.2",
+    "supertest": "^7.0.0",
+    "winston": "^3.14.2"
+  }
+}

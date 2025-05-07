@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ECDSA Signature Demo</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f4f4f4;
+      color: #333;
+      margin: 0;
+      padding: 20px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    .container {
+      background-color: #fff;
+      padding: 30px;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      width: 80%;
+      max-width: 600px;
+    }
+
+    h1,
+    h2 {
+      color: #337ab7;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: bold;
+      color: #555;
+    }
+
+    textarea {
+      width: 100%;
+      min-height: 100px;
+      margin-bottom: 15px;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      box-sizing: border-box;
+      font-family: monospace;
+      font-size: 14px;
+    }
+
+    button {
+      background-color: #5cb85c;
+      color: white;
+      padding: 12px 20px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 16px;
+      transition: background-color 0.3s ease;
+      margin-right: 10px;
+    }
+
+    button:hover {
+      background-color: #4cae4c;
+    }
+
+    #result {
+      margin-top: 25px;
+      padding: 15px;
+      background-color: #f9f9f9;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-weight: bold;
+      color: #333;
+      text-align: center;
+    }
+
+    .key-container {
+      display: flex;
+      flex-direction: column;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <h1>ECDSA Signature Demo</h1>
+
+    <button id="generateKeysBtn">Generate Keys</button>
+
+    <h2>Keys</h2>
+    <div class="key-container">
+      <label for="publicKey">Public Key (SPKI - Base64):</label>
+      <textarea id="publicKey" readonly></textarea>
+      <label for="privateKey">Private Key (PKCS#8 - Base64):</label>
+      <textarea id="privateKey" readonly></textarea>
+    </div>
+
+    <h2>Sign Message</h2>
+    <label for="messageToSign">Message:</label>
+    <textarea id="messageToSign">This is a test message.</textarea>
+    <button id="signBtn">Sign</button>
+    <label for="signature">Signature (Hex):</label>
+    <textarea id="signature" readonly></textarea>
+
+    <h2>Verify Signature</h2>
+    <label for="verifyMessage">Message:</label>
+    <textarea id="verifyMessage">This is a test message.</textarea>
+    <label for="verifyPublicKey">Public Key (SPKI - Base64):</label>
+    <textarea id="verifyPublicKey"></textarea>
+    <label for="verifySignature">Signature (Hex):</label>
+    <textarea id="verifySignature"></textarea>
+    <button id="verifyBtn">Verify</button>
+
+    <div id="result"></div>
+  </div>
+
+  <script>
+    // Helper function to convert PEM to ArrayBuffer
+    function pemToArrayBuffer(pem) {
+      const base64 = pem
+        .replace(/-----BEGIN PRIVATE KEY-----/g, '')
+        .replace(/-----END PRIVATE KEY-----/g, '')
+        .replace(/\s+/g, '');
+      const binaryString = atob(base64);
+      const buffer = new Uint8Array(binaryString.length);
+      for (let i = 0; i < binaryString.length; i++) {
+        buffer[i] = binaryString.charCodeAt(i);
+      }
+      return buffer.buffer;
+    }
+
+    // Get references to DOM elements
+    const generateKeysBtn = document.getElementById('generateKeysBtn');
+    const publicKeyTextarea = document.getElementById('publicKey');
+    const privateKeyTextarea = document.getElementById('privateKey');
+    const messageToSignTextarea = document.getElementById('messageToSign');
+    const signBtn = document.getElementById('signBtn');
+    const signatureTextarea = document.getElementById('signature');
+    const verifyMessageTextarea = document.getElementById('verifyMessage');
+    const verifyPublicKeyTextarea = document.getElementById('verifyPublicKey');
+    const verifySignatureTextarea = document.getElementById('verifySignature');
+    const verifyBtn = document.getElementById('verifyBtn');
+    const resultDiv = document.getElementById('result');
+
+    // Variables to store keys (JWK format for potential future use)
+    let publicKeyJwk;
+    let privateKeyJwk;
+
+    // Function to generate ECDSA key pair
+    async function generateKeys() {
+      try {
+        const keyPair = await crypto.subtle.generateKey(
+          {
+            name: 'ECDSA',
+            namedCurve: 'P-256'
+          },
+          true, // Key is extractable
+          ['sign', 'verify'] // Key usages
+        );
+        publicKeyJwk = await crypto.subtle.exportKey('jwk', keyPair.publicKey);
+        privateKeyJwk = await crypto.subtle.exportKey('jwk', keyPair.privateKey);
+
+        const publicKeySpki = await exportSpki(keyPair.publicKey);
+        const privateKeyPkcs8 = await exportPkcs8(keyPair.privateKey);
+        const privateKeyPem = await exportPrivatePem(keyPair.privateKey);
+
+        publicKeyTextarea.value = publicKeySpki;
+        privateKeyTextarea.value = privateKeyPkcs8;
+        verifyPublicKeyTextarea.value = publicKeySpki;
+
+        localStorage.setItem('publicKeySpki', publicKeySpki);
+        localStorage.setItem('privateKeyPkcs8', privateKeyPkcs8);
+        localStorage.setItem('privateKeyPkcs8Pem', privateKeyPem); // Store PEM private key
+
+        resultDiv.textContent = 'Keys generated and stored in localStorage (including PEM private key).';
+      } catch (error) {
+        console.error('Error generating keys:', error);
+        resultDiv.textContent = `Error generating keys: ${error.message}`;
+      }
+    }
+
+    // Function to sign a message using the private key (handling PEM)
+    async function signMessage() {
+      const message = messageToSignTextarea.value;
+      const privateKeyPem = localStorage.getItem('privateKeyPkcs8Pem'); // Assuming PEM private key is stored
+
+      if (!privateKeyPem) {
+        resultDiv.textContent = 'Private key not found (PEM). Please generate keys first.';
+        return;
+      }
+
+      try {
+        const privateKeyBuffer = pemToArrayBuffer(privateKeyPem);
+        const privateKey = await crypto.subtle.importKey(
+          'pkcs8',
+          privateKeyBuffer,
+          {
+            name: 'ECDSA',
+            namedCurve: 'P-256'
+          },
+          false,
+          ['sign']
+        );
+
+        const encodedMessage = new TextEncoder().encode(message);
+        const messageHashBuffer = await crypto.subtle.digest('SHA-256', encodedMessage);
+
+        const signatureBuffer = await crypto.subtle.sign(
+          {
+            name: 'ECDSA',
+            hash: { name: 'SHA-256' }
+          },
+          privateKey,
+          messageHashBuffer
+        );
+        const signatureHex = bufferToHex(signatureBuffer);
+        signatureTextarea.value = signatureHex;
+        resultDiv.textContent = 'Message signed.';
+      } catch (error) {
+        console.error('Error signing message:', error);
+        resultDiv.textContent = `Error signing message: ${error.message}`;
+      }
+    }
+
+    // Function to verify a signature using the public key
+    async function verifySignature() {
+      const message = verifyMessageTextarea.value;
+      const publicKeySpkiBase64 = verifyPublicKeyTextarea.value;
+      const signatureHex = verifySignatureTextarea.value;
+
+      if (!publicKeySpkiBase64) {
+        resultDiv.textContent = 'Public key not provided.';
+        return;
+      }
+      if (!signatureHex) {
+        resultDiv.textContent = 'Signature not provided.';
+        return;
+      }
+
+      try {
+        const publicKey = await importSpki(publicKeySpkiBase64);
+        const signatureBuffer = hexToBuffer(signatureHex);
+        const encodedMessage = new TextEncoder().encode(message);
+        const isValid = await crypto.subtle.verify(
+          {
+            name: 'ECDSA',
+            hash: { name: 'SHA-256' }
+          },
+          publicKey,
+          signatureBuffer,
+          encodedMessage
+        );
+        resultDiv.textContent = `Signature is valid: ${isValid}`;
+      } catch (error) {
+        console.error('Error verifying signature:', error);
+        resultDiv.textContent = `Error verifying signature: ${error.message}`;
+      }
+    }
+
+    // Helper function to export public key to SPKI format (Base64)
+    async function exportSpki(publicKey) {
+      const spkiBuffer = await crypto.subtle.exportKey('spki', publicKey);
+      return btoa(String.fromCharCode(...new Uint8Array(spkiBuffer)));
+    }
+
+    // Helper function to import public key from SPKI format (Base64)
+    async function importSpki(spkiBase64) {
+      const spkiBuffer = new Uint8Array(atob(spkiBase64).split('').map(char => char.charCodeAt(0)));
+      return await crypto.subtle.importKey(
+        'spki',
+        spkiBuffer,
+        { name: 'ECDSA', namedCurve: 'P-256' },
+        true,
+        ['verify']
+      );
+    }
+
+    // Helper function to export private key to PKCS#8 format (Base64)
+    async function exportPkcs8(privateKey) {
+      const pkcs8Buffer = await crypto.subtle.exportKey('pkcs8', privateKey);
+      return btoa(String.fromCharCode(...new Uint8Array(pkcs8Buffer)));
+    }
+
+    // Helper function to export private key to PEM format
+    async function exportPrivatePem(privateKey) {
+      const pkcs8Buffer = await crypto.subtle.exportKey('pkcs8', privateKey);
+      const base64 = btoa(String.fromCharCode(...new Uint8Array(pkcs8Buffer)));
+      const formattedBase64 = base64.replace(/(.{64})/g, '$1\n');
+      return `-----BEGIN PRIVATE KEY-----\n${formattedBase64}\n-----END PRIVATE KEY-----\n`;
+    }
+
+    // Helper function to import private key from PKCS#8 format (Base64)
+    async function importPkcs8(pkcs8Base64) {
+      const pkcs8Buffer = new Uint8Array(atob(pkcs8Base64).split('').map(char => char.charCodeAt(0)));
+      return await crypto.subtle.importKey(
+        'pkcs8',
+        pkcs8Buffer,
+        { name: 'ECDSA', namedCurve: 'P-256' },
+        true,
+        ['sign']
+      );
+    }
+
+    // Helper function to convert ArrayBuffer to hexadecimal string
+    function bufferToHex(buffer) {
+      return Array.from(new Uint8Array(buffer))
+        .map(b => b.toString(16).padStart(2, '0'))
+        .join('');
+    }
+
+    // Helper function to convert hexadecimal string to ArrayBuffer
+    function hexToBuffer(hexString) {
+      const byteNumbers = [];
+      for (let i = 0; i < hexString.length; i += 2) {
+        byteNumbers.push(parseInt(hexString.substring(i, i + 2), 16));
+      }
+      return new Uint8Array(byteNumbers).buffer;
+    }
+
+    // Event listeners for buttons
+    generateKeysBtn.addEventListener('click', generateKeys);
+    signBtn.addEventListener('click', signMessage);
+    verifyBtn.addEventListener('click', verifySignature);
+
+    // Attempt to load keys from localStorage on page load
+    window.onload = () => {
+      const storedPublicKey = localStorage.getItem('publicKeySpki');
+      const storedPrivateKey = localStorage.getItem('privateKeyPkcs8');
+      if (storedPublicKey && storedPrivateKey) {
+        publicKeyTextarea.value = storedPublicKey;
+        privateKeyTextarea.value = storedPrivateKey;
+        verifyPublicKeyTextarea.value = storedPublicKey;
+        resultDiv.textContent = 'Keys loaded from localStorage.';
+      }
+    };
+  </script>
+</body>
+
+</html>

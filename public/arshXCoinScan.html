@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ArshX Explorer</title>
+  <link rel="icon" href="/public/favicon.png" type="image/png">
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f0f2f5;
+      color: #333;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+      background: #111827;
+      color: white;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    header img {
+      width: 40px;
+      height: 40px;
+      margin-right: 12px;
+    }
+
+    header h1 {
+      font-size: 1.6rem;
+      margin: 0;
+    }
+
+    .container {
+      max-width: 1100px;
+      margin: 2rem auto;
+      padding: 0 1rem;
+    }
+
+    #searchBox {
+      text-align: center;
+      margin-bottom: 1.5rem;
+    }
+
+    #searchInput {
+      padding: 0.6rem 1rem;
+      width: 100%;
+      max-width: 400px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      font-size: 1rem;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background-color: white;
+      border-radius: 6px;
+      overflow: hidden;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+    }
+
+    th,
+    td {
+      padding: 0.75rem;
+      text-align: left;
+      font-size: 0.95rem;
+      word-break: break-word;
+      width: 2px;
+    }
+
+    th {
+      background-color: #1f2937;
+      color: white;
+    }
+
+    tr:nth-child(even) {
+      background-color: #f9fafb;
+    }
+
+    .small-text {
+      font-size: 0.8rem;
+      color: #555;
+    }
+
+    .status-confirmed {
+      color: green;
+      font-weight: bold;
+    }
+
+    .status-pending {
+      color: orange;
+      font-weight: bold;
+    }
+
+    .status-dropped {
+      color: red;
+      font-weight: bold;
+    }
+
+    @media (max-width: 768px) {
+
+      th,
+      td {
+        font-size: 0.75rem;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <img src="/public/logo.png" alt="ArshXCoin Logo" />
+    <h1>ArshXCoin Transaction Explorer</h1>
+  </header>
+
+  <div class="container">
+    <div id="searchBox">
+      <input type="text" id="searchInput" placeholder="Search by address or txHash..." />
+    </div>
+
+    <table id="txTable">
+      <thead>
+        <tr>
+          <th>Tx Hash</th>
+          <th>From</th>
+          <th>To</th>
+          <th>Amount</th>
+          <th>Gas Fee</th>
+          <th>Status</th>
+          <th>Time</th>
+        </tr>
+      </thead>
+      <tbody id="txBody"></tbody>
+    </table>
+  </div>
+
+  <script>
+    const API_URL = '/transaction/search';
+
+    async function fetchTransactions(searchText = '') {
+      const url = searchText ? `${API_URL}?searchText=${encodeURIComponent(searchText)}` : API_URL;
+      const res = await fetch(url);
+      const json = await res.json();
+      return json.data || [];
+    }
+
+    function formatDate(timestamp) {
+      return new Date(timestamp).toLocaleString();
+    }
+
+    function renderTable(transactions) {
+      const tbody = document.getElementById('txBody');
+      tbody.innerHTML = '';
+
+      transactions.forEach(tx => {
+        const tr = document.createElement('tr');
+
+        tr.innerHTML = `
+          <td class="small-text">${tx.txHash}</td>
+          <td class="small-text">${tx.fromAddress}</td>
+          <td class="small-text">${tx.toAddress}</td>
+          <td>${tx.amount}</td>
+          <td>${tx.gasFee}</td>
+          <td class="status-${tx.status}">${tx.status}</td>
+          <td>${formatDate(tx.timestamp)}</td>
+        `;
+
+        tbody.appendChild(tr);
+      });
+    }
+
+    document.getElementById('searchInput').addEventListener('input', async (e) => {
+      const value = e.target.value.trim();
+      const txs = await fetchTransactions(value);
+      renderTable(txs);
+    });
+
+    window.addEventListener('DOMContentLoaded', async () => {
+      const txs = await fetchTransactions();
+      renderTable(txs);
+    });
+  </script>
+</body>
+
+</html>
