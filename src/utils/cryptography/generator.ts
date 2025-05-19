@@ -9,7 +9,7 @@ import { webcrypto as crypto } from 'node:crypto';
 function arrayBufferToPem(buffer: ArrayBuffer, type: 'PUBLIC KEY' | 'PRIVATE KEY'): string {
   const base64 = Buffer.from(buffer).toString('base64');
   const formattedBase64 = base64.replace(/(.{64})/g, '$1\n');
-  return `-----BEGIN ${type}-----\n${formattedBase64}\n-----END ${type}-----\n`;
+  return formattedBase64;
 }
 
 /**

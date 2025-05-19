@@ -4,7 +4,7 @@ import { MempoolTransactionModel } from '../models/mempoolTransaction';
 import { createHash } from 'crypto';
 import { broadcastBlock } from './broadcastBlock';
 import { NodeRepository } from '@services';
-import { formatMessage, LoggerUtil, signWithPrivateKey } from '@utils';
+import { formatMessage, formatTransactions, LoggerUtil, signWithPrivateKey } from '@utils';
 import type { Logger } from 'winston';
 import { BlockchainRepository } from '../services/blockchain/BlockChainRepository';
 import type { INode } from '@models';
@@ -104,6 +104,7 @@ export async function mineBlock(myNode: INode) {
   const { rewardTransaction, rewardAmount } = await createRewardTransaction(myNode, timestamp);
 
   transactions.unshift(rewardTransaction); // Reward transaction comes first
+  const formatedTransactions = formatTransactions(transactions);
 
   // Step 3: Create new block
   const previousBlock = await BlockModel.findOne().sort({ createdAt: -1 }).exec();
@@ -116,7 +117,7 @@ export async function mineBlock(myNode: INode) {
   const startMiningTime = Date.now();
   logger.info(`⛏️  Mining block...`);
   while (true) {
-    const dataToHash = previousHash + timestamp + JSON.stringify(transactions) + nonce;
+    const dataToHash = previousHash + timestamp + formatedTransactions + nonce;
     hash = createHash('sha256').update(dataToHash).digest('hex');
 
     if (hash.startsWith(DIFFICULTY_PREFIX)) {

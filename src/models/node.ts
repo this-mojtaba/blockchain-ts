@@ -17,6 +17,9 @@ export class INode {
   public address?: string; // domain of node (starts with http(s)://)
 
   @prop()
+  public hashedAddress?: string; // public key hashed
+
+  @prop()
   public lastSeen?: Date;
 
   @prop()

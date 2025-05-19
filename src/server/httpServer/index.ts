@@ -13,6 +13,8 @@ import { FileHandler } from './fileHandler';
 import { RequestHandler } from './requestHandler';
 import { bootstrapNode } from '../../blockChainActions/bootstrapNode';
 import { broadcastDisconnectionNotice } from '../../blockChainActions/disconnect';
+import { NodeRepository } from '@services';
+import { INodeProps, NodeModel } from '@models';
 
 dotenv.config();
 
@@ -66,12 +68,20 @@ class Server {
 
   // Handle shutdown signals
   async shutdown() {
-    this.logger.info('Shutting down server...');
+    console.log('Shutting down server...');
     await broadcastDisconnectionNotice();
     const highestId = setInterval(() => {}, 1000) as unknown as number;
     for (let i = 0; i <= highestId; i++) {
       clearInterval(i);
     }
+    await NodeRepository.updateOne(
+      {
+        isMySelf: true
+      },
+      {
+        isConnected: false
+      }
+    );
     process.exit(0);
   }
 

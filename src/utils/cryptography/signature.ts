@@ -1,6 +1,7 @@
 import { webcrypto as crypto } from 'node:crypto';
 import { generateKeyPair } from './generator';
 import type { IBodyInput } from '@ServerTypes';
+import type { ITransaction } from '@models';
 
 /**
  * Converts a PEM encoded key (Base64 format with header and footer) to an ArrayBuffer.
@@ -145,4 +146,14 @@ export function formatMessage(messages: IBodyInput): string {
   }
 
   return orderedValues.join('');
+}
+
+export function formatTransactions(transactions: ITransaction[]) {
+  let fromatted = '';
+
+  transactions.map((transaction: ITransaction) => {
+    fromatted = `${transaction._id}-${transaction.fromAddress}-${transaction.toAddress}-${transaction.amount}-${transaction.gasFee}-${transaction.txHash}-${transaction.timestamp}-${transaction.signature}_NEXT_`;
+  });
+
+  return fromatted;
 }

@@ -1,6 +1,7 @@
 import { generateKeyPair } from '@utils';
 import { NodeRepository } from './NodeRepository';
 import { INodeProps, type INode, type ObjectIDType } from '@models';
+import { hash } from 'node:crypto';
 
 export class NodeServiceClass {
   async getMyNode(props: string[]): Promise<INode | null> {
@@ -15,7 +16,9 @@ export class NodeServiceClass {
     } else {
       const { publicKeyPem: publicKey, privateKeyPem: privateKey } = await generateKeyPair();
 
-      return await NodeRepository.create({ ...data, isMySelf: true, publicKey, privateKey });
+      const hashedAddress = hash('sha256', publicKey);
+
+      return await NodeRepository.create({ ...data, isMySelf: true, publicKey, privateKey, hashedAddress });
     }
   }
 

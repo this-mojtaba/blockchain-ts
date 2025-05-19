@@ -1,5 +1,5 @@
 {
-  "name": "bun-server-template",
+  "name": "blockchain-ts-arshXCoin",
   "module": "./src/server/httpServer/index.ts",
   "version": "0.0.1",
   "type": "module",
@@ -10,8 +10,7 @@
     "test-all": "bun run test-unit && bun run test-learning && bun run test-integrate",
     "test-integrate": "bash ./bash/test-integrate.sh",
     "test-learning": "bun test learning",
-    "test-unit": "bun test unit",
-    "create-user": "bun ./src/seeders/userSeed.ts"
+    "test-unit": "bun test unit"
   },
   "devDependencies": {
     "@types/bun": "^1.1.8",

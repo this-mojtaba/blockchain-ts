@@ -29,7 +29,7 @@ class NodeRepositoryClass {
   }
 
   async updateOne(query: FilterQuery<INode>, update: UpdateQuery<INode>): Promise<INode | null> {
-    return await NodeModel.findByIdAndUpdate(query, update, { new: true });
+    return await NodeModel.findOneAndUpdate(query, update, { new: true });
   }
 
   async delete(id: ObjectIDType<INode>): Promise<boolean> {

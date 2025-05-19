@@ -97,12 +97,6 @@ export class BlockController {
       throw CustomError('Node not found');
     }
 
-    // TODO: R&D this pice of code
-    // const isValid = await BlockchainService.validateBlock(block as unknown as IBlock);
-    // if (!isValid) {
-    //   throw CustomError('Invalid block received');
-    // }
-
     await BlockchainService.addBlockToChain(block as unknown as IBlock);
 
     await NodeService.updateNodeWithNetworkId(existingNode._id!, {

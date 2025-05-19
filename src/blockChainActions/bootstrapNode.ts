@@ -1,18 +1,28 @@
-import { NodeService, TransactionRepository } from '@services';
+import { NodeRepository, NodeService, TransactionRepository } from '@services';
 import { INodeProps, type INode } from '@models';
 import { ENV } from '@ServerTypes';
 import { startHeartbeat } from './heartbeat';
 import { formatMessage, LoggerUtil, signWithPrivateKey } from '@utils';
 import { mineBlock } from './mine';
 import { BlockchainRepository } from '../services/blockchain/BlockChainRepository';
-import { BlockchainService } from '../services/blockchain/BlockChainService';
+import { BlockchainService, verifyBlockHash } from '../services/blockchain/BlockChainService';
 
 const logger = LoggerUtil.getLogger();
 
 export async function bootstrapNode(): Promise<void> {
   let myNode = await NodeService.getMyNode(INodeProps.self);
+
+  // Set my node as connected
+  await NodeRepository.updateOne(
+    {
+      isMySelf: true
+    },
+    {
+      isConnected: true
+    }
+  );
   if (myNode) {
-    logger.info('🔄 Node already exists, skipping creation');
+    logger.info('🔄 My Node already exists, skipping creation');
   } else {
     const idOnNetwork = crypto.randomUUID();
 
@@ -88,14 +98,40 @@ export async function bootstrapNode(): Promise<void> {
       const { data: blocks, documentCount } = fullChain;
       if (documentCount > myChainCount) {
         logger.info(`🔄 Syncing with node: ${nodeUrl}`);
-        // replcae all blocks with the new ones
-        await BlockchainRepository.deleteAll({});
+        const allTransactions = blocks.reduce((acc: any[], block: any) => {
+          if (block.transactions && Array.isArray(block.transactions)) {
+            return acc.concat(block.transactions);
+          }
+          return acc;
+        }, []);
         // TODO: validate every block and transaction!
-        await BlockchainRepository.insertMany(blocks);
-        // replace all transactions with the new ones
-        await TransactionRepository.deleteAll({});
+        try {
+          for (let i = 0; i < blocks.length; i++) {
+            const block = blocks[i];
+            const isVerifiedBlock = verifyBlockHash(block);
+            if (!isVerifiedBlock) {
+              logger.error(`❌ Invalid block hash: ${block.hash}`);
+              throw new Error('Block validation failed');
+            }
+            const isTransactionsVerified = await BlockchainService.verifyTransactions(block.transactions);
+            if (!isTransactionsVerified) {
+              logger.error(`❌ Invalid transactions in block: ${block.hash}`);
+              throw new Error('Transaction validation failed');
+            }
+          }
+          // replace all transactions with the new ones
+          await TransactionRepository.deleteAll({});
+          // replcae all blocks with the new ones
+          await BlockchainRepository.deleteAll({});
 
-        logger.info(`✅ Synced ${documentCount} blocks from node: ${nodeUrl}`);
+          await BlockchainRepository.insertMany(blocks);
+          await TransactionRepository.insert(allTransactions);
+
+          logger.info(`✅ Synced ${documentCount} blocks from node: ${nodeUrl}`);
+        } catch (error) {
+          logger.error('❌ Error validating blocks:', (error as Error).message);
+          continue;
+        }
       }
     } catch (err) {
       logger.warn(`⚠️ Failed to connect to ${nodeUrl}:`, (err as Error).message);

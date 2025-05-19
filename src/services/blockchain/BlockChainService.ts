@@ -1,13 +1,6 @@
-import { formatMessage, LoggerUtil, verifySignature } from '@utils';
+import { formatMessage, formatTransactions, LoggerUtil, verifySignature } from '@utils';
 import { BlockchainRepository } from './BlockChainRepository';
-import {
-  ITransaction,
-  ITransactionProps,
-  ITransactionStatus,
-  TransactionModel,
-  type INode,
-  type ObjectIDType
-} from '@models';
+import { ITransaction, ITransactionProps, ITransactionStatus, TransactionModel } from '@models';
 import { BlockModel, type IBlock } from '../../models/block';
 import { createHash } from 'crypto';
 import { DIFFICULTY_PREFIX } from '../../blockChainActions/mine';
@@ -27,10 +20,11 @@ function removeExtraSlashes(obj: any) {
 }
 
 export function verifyBlockHash(block: IBlock): boolean {
-  // const transactionsString = JSON.stringify(block.transactions).toString().replaceAll('\\\\', '\\');
-  const cleanedTransactions = removeExtraSlashes(JSON.parse(JSON.stringify(block.transactions))); // تبدیل به JSON و سپس تجزیه برای اعمال تغییرات
-  const jsonString = JSON.stringify(cleanedTransactions);
-  let dataToHash = block.previousHash + block.timestamp + jsonString + block.nonce;
+  const transactions = block.transactions as any;
+  // TODO: format same as mine (use array for it, because objects hasen't ordered!)
+  const formatedTransactions = formatTransactions(transactions);
+
+  let dataToHash = block.previousHash + block.timestamp + formatedTransactions + block.nonce;
 
   const calculatedHash = createHash('sha256').update(dataToHash).digest('hex');
 
@@ -42,10 +36,6 @@ export function verifyBlockHash(block: IBlock): boolean {
 
 export class BlockchainServiceClass {
   async validateBlock(block: IBlock): Promise<boolean> {
-    const latestBlock = await BlockchainRepository.getLastBlock();
-
-    if (!latestBlock) return false;
-    // if (block.previousHash !== latestBlock.hash) return false;
     if (!verifyBlockHash(block)) return false;
     // TODO:
     const transactions = block.transactions as unknown as ITransaction[];
@@ -152,8 +142,7 @@ export class BlockchainServiceClass {
     const blocks = await BlockModel.find({})
       .sort({ index: 1 })
       .populate({
-        path: 'transactions',
-        select: ITransactionProps.self
+        path: 'transactions'
       })
       .exec();
     return blocks;
