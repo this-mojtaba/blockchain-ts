@@ -33,7 +33,7 @@ async function createRewardTransaction(myNode: INode, timestamp: number) {
   const formatedMessage = formatMessage({
     publicKey: myNode.publicKey!,
     fromAddress: fromAdderess,
-    toAddress: myNode.publicKey!,
+    toAddress: myNode.hashedAddress!,
     amount: rewardAmount,
     gasFee: 0,
     timestamp
@@ -48,8 +48,9 @@ async function createRewardTransaction(myNode: INode, timestamp: number) {
     timestamp: timestamp
   });
   const rewardTransaction = await TransactionModel.create({
+    publicKeySender: myNode.publicKey,
     fromAddress: fromAdderess, // Special address
-    toAddress: myNode.publicKey,
+    toAddress: myNode.hashedAddress,
     amount: rewardAmount,
     gasFee: 0,
     timestamp,
@@ -92,6 +93,7 @@ export async function mineBlock(myNode: INode) {
         txHash: mempoolTx.txHash,
         signature: mempoolTx.signature,
         timestamp: mempoolTx.timestamp,
+        publicKeySender: mempoolTx.publicKeySender,
         status: ITransactionStatus.confirmed
       };
       const createdNewTransaction = await TransactionModel.create(mempoolTransactionData);

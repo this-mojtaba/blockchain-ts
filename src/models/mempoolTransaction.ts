@@ -25,6 +25,9 @@ export class IMempoolTransaction {
   public fromAddress!: string;
 
   @prop({ required: true })
+  public publicKeySender!: string;
+
+  @prop({ required: true })
   public toAddress!: string;
 
   @prop({ required: true })

@@ -63,7 +63,8 @@ export const INodeProps = {
     NodeFields.publicKey,
     NodeFields.privateKey,
     NodeFields.isMining,
-    NodeFields.address
+    NodeFields.address,
+    NodeFields.hashedAddress
   ],
   onNetWork: [NodeFields._id, NodeFields.idOnNetwork, NodeFields.isConnected, NodeFields.publicKey, NodeFields.address]
 } as Record<string, string[]>;

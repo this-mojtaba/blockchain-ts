@@ -8,17 +8,6 @@ import type { Logger } from 'winston';
 
 const logger: Logger = LoggerUtil.getLogger();
 
-function removeExtraSlashes(obj: any) {
-  for (const key in obj) {
-    if (typeof obj[key] === 'string') {
-      obj[key] = obj[key].replaceAll('\\\\', '\\');
-    } else if (typeof obj[key] === 'object' && obj[key] !== null) {
-      removeExtraSlashes(obj[key]);
-    }
-  }
-  return obj;
-}
-
 export function verifyBlockHash(block: IBlock): boolean {
   const transactions = block.transactions as any;
   // TODO: format same as mine (use array for it, because objects hasen't ordered!)
@@ -46,10 +35,7 @@ export class BlockchainServiceClass {
 
   async validateTransaction(transaction: ITransaction): Promise<boolean> {
     // validate the signature
-    let publicKey = transaction.fromAddress;
-    if (transaction.fromAddress === 'COINBASE') {
-      publicKey = transaction.toAddress;
-    }
+    let publicKey = transaction.publicKeySender!;
 
     const message = formatMessage({
       publicKey: publicKey!,

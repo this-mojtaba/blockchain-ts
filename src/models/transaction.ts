@@ -45,6 +45,9 @@ export class ITransaction {
   @prop()
   public signature?: string;
 
+  @prop()
+  public publicKeySender?: string;
+
   @prop({ type: Number })
   public timestamp?: Number;
 
@@ -74,7 +77,8 @@ export const ITransactionProps = {
     Transaction.status,
     Transaction.txHash,
     Transaction.signature,
-    Transaction.timestamp
+    Transaction.timestamp,
+    Transaction.publicKeySender
   ]
 } as Record<string, string[]>;
 

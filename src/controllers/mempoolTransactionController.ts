@@ -39,7 +39,8 @@ export class MempoolTransactionController {
   })
   @use(verifySignatureBody)
   async sendTransactionToMempool(req: IRequest): Promise<IResponseData<IMempoolTransaction>> {
-    const { fromAddress, toAddress, amount, gasFee, timestamp, signature } = req.bodyData as ITransactionMempoolInput;
+    const { fromAddress, toAddress, amount, gasFee, timestamp, signature, publicKey } =
+      req.bodyData as ITransactionMempoolInput;
 
     const totalAmount = (amount + gasFee) / ARSHXCOIN_TO_ATOSHIS;
 
@@ -68,6 +69,7 @@ export class MempoolTransactionController {
       signature,
       txHash,
       expiresAt,
+      publicKeySender: publicKey,
       status: MempoolTransactionStatus.Pending
     });
 
