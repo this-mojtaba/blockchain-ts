@@ -21,17 +21,21 @@ simple HTTP server, transaction handling, cryptographic signing, and a proof-of-
 
 <pre>
 src/
-├── core/ # Blockchain logic (mining, hashing, validation)
-├── models/ # Mongoose models (transactions, blocks, etc.)
+├── blockChainActions/    # Blockchain logic (mining, hashing, validation)
+├── controllers/          # API endpoints
+├── decorators/           # Decorators for server routes (@get, @post, ...)
+├── helpers/              # General-purpose helper functions
+├── middlewares/          # HTTP middlewares
+├── models/               # Mongoose models (Transaction, Block, etc.)
 ├── server/
-│ └── httpServer/ # HTTP server entry
-├── utils/ # Helper functions (crypto, logging)
-├── worker.ts # Background worker for mining or sync
-├── tests/ # Unit & integration tests
-├── html-ui/ # Static frontend (etherscan-like view)
-.bash/
-└── test-integrate.sh # Integration test script
-.env-example
+│   └── httpServer/       # HTTP server entry point
+├── utils/                # Utility functions (crypto, logging, etc.)
+├── tests/                # Unit and integration tests
+├── services/             # Custom methods to query the database
+bash/
+└── test-integrate.sh     # Integration test script
+.env-example              # Example environment variables file
+public/                   # Public files served by the server
 </pre>
 
 ---
