@@ -19,10 +19,20 @@ simple HTTP server, transaction handling, cryptographic signing, and a proof-of-
 
 ## 📁 Project Structure
 
-src/ ├── core/ # Blockchain logic (mining, hashing, validation) ├── models/ # Mongoose models (transactions, blocks,
-etc.) ├── server/ │ └── httpServer/ # HTTP server entry ├── utils/ # Helper functions (crypto, logging) ├── worker.ts #
-Background worker for mining or sync ├── tests/ # Unit & integration tests ├── html-ui/ # Static frontend
-(etherscan-like view) .bash/ └── test-integrate.sh # Integration test script .env-example
+<pre>
+src/
+├── core/ # Blockchain logic (mining, hashing, validation)
+├── models/ # Mongoose models (transactions, blocks, etc.)
+├── server/
+│ └── httpServer/ # HTTP server entry
+├── utils/ # Helper functions (crypto, logging)
+├── worker.ts # Background worker for mining or sync
+├── tests/ # Unit & integration tests
+├── html-ui/ # Static frontend (etherscan-like view)
+.bash/
+└── test-integrate.sh # Integration test script
+.env-example
+</pre>
 
 ---
 
@@ -37,8 +47,8 @@ Background worker for mining or sync ├── tests/ # Unit & integration tests
 ### Clone & Setup
 
 ```bash
-git clone https://github.com/yourusername/blockchain-ts-arshXCoin.git
-cd blockchain-ts-arshXCoin
+git clone git@github.com:this-mojtaba/blockchain-ts.git
+cd blockchain-ts
 bun install
 ```
 
@@ -77,12 +87,12 @@ Description: Register a new node with another node in the network.
 
 Request Body:
 
-<pre>```{
+<pre>{
   "idOnNetwork": "string",
   "address": "string",
   "publicKey": "string",
   "signature": "string"
-}```</pre>
+}</pre>
 
 POST /node/heartbeat
 
@@ -90,11 +100,11 @@ Description: Send a heartbeat signal to let other nodes know this node is alive.
 
 Request Body:
 
-<pre>```{
+<pre>{
   "idOnNetwork": "string",
   "signature": "string",
   "publicKey": "string"
-}```</pre>
+}</pre>
 
 POST /node/disconnect
 
@@ -102,11 +112,11 @@ Description: Notify other nodes when this node is disconnecting from the network
 
 Request Body:
 
-<pre>```{
+<pre>{
   "idOnNetwork": "string",
   "signature": "string",
   "publicKey": "string"
-}```</pre>
+}</pre>
 
 POST /blockchain/receive
 
@@ -114,7 +124,7 @@ Description: Receive a newly mined block from another node.
 
 Request Body:
 
-<pre>```{
+<pre>{
   "idOnNetwork": "string",
   "signature": "string",
   "publicKey": "string",
@@ -139,7 +149,7 @@ Request Body:
     "miner": "string",
     "miningTime": "number"
   }
-}```</pre>
+}</pre>
 
 GET /blockchain/get-full-chain
 
@@ -185,7 +195,7 @@ in the block hash.
 
 ```bash
 while (true) {
-  const dataToHash = previousHash + timestamp + JSON.stringify(transactions) + nonce;
+  const dataToHash = previousHash + timestamp + formatedTransactions + nonce;
   hash = createHash('sha256').update(dataToHash).digest('hex');
 
   if (hash.startsWith(DIFFICULTY_PREFIX)) {
