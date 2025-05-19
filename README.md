@@ -65,17 +65,103 @@ DEFAULT_NODES_TO_CONNECT=http://localhost:2002, http://localhost:2003
 | `bun run dev`   | Start server in development mode |
 | `bun run start` | Start production server          |
 
-### 🌐 API Endpoints:
+### 🌐 API Endpoints
 
-<!-- TODO: Add full API docs if available -->
+GET /ping
 
-GET /api/v1/transactions # List all transactions
+Description: Test the availability of a node in the network.
 
-POST /api/v1/transactions # Submit new transaction
+POST /node/register
 
-GET /api/v1/blocks # List blocks in chain
+Description: Register a new node with another node in the network.
 
-GET /api/v1/blocks/latest # Get latest mined block
+Request Body:
+
+<pre>```{
+  "idOnNetwork": "string",
+  "address": "string",
+  "publicKey": "string",
+  "signature": "string"
+}```</pre>
+
+POST /node/heartbeat
+
+Description: Send a heartbeat signal to let other nodes know this node is alive.
+
+Request Body:
+
+<pre>```{
+  "idOnNetwork": "string",
+  "signature": "string",
+  "publicKey": "string"
+}```</pre>
+
+POST /node/disconnect
+
+Description: Notify other nodes when this node is disconnecting from the network.
+
+Request Body:
+
+<pre>```{
+  "idOnNetwork": "string",
+  "signature": "string",
+  "publicKey": "string"
+}```</pre>
+
+POST /blockchain/receive
+
+Description: Receive a newly mined block from another node.
+
+Request Body:
+
+<pre>```{
+  "idOnNetwork": "string",
+  "signature": "string",
+  "publicKey": "string",
+  "block": {
+    "index": "number",
+    "previousHash": "string",
+    "hash": "string",
+    "nonce": "number",
+    "difficulty": "number",
+    "timestamp": "number",
+    "transactions": [
+      {
+        "fromAddress": "string",
+        "toAddress": "string",
+        "amount": "number",
+        "gasFee": "number",
+        "txHash": "string",
+        "signature": "string"
+      }
+    ],
+    "totalFees": "number",
+    "miner": "string",
+    "miningTime": "number"
+  }
+}```</pre>
+
+GET /blockchain/get-full-chain
+
+Description: Retrieve the full blockchain from a specific node.
+
+POST /mempool-transaction/send
+
+Description: Send a new transaction to the node's mempool.
+
+Request Body:
+
+<pre>```{
+  "publicKey": "string",
+  "fromAddress": "string",
+  "toAddress": "string",
+  "amount": "number",
+  "gasFee": "number",
+  "timestamp": "number",
+  "signature": "string"
+}```</pre>
+
+GET /transaction/search Description: Search transactions across the blockchain network.
 
 ### 💻 Frontend
 

@@ -15,10 +15,14 @@ interface IRegisterNodeInput {
 
 interface IHeartBeatNodeInput extends ISignatureInput {
   idOnNetwork: string;
+  signature: string;
+  publicKey: string;
 }
 
 interface IDisconnectNodeInput extends ISignatureInput {
   idOnNetwork: string;
+  signature: string;
+  publicKey: string;
 }
 
 const logger: Logger = LoggerUtil.getLogger();
@@ -78,10 +82,10 @@ export class NodeController {
     type: 'object',
     properties: {
       idOnNetwork: { type: 'string' },
-      signature: { type: 'string', nullable: true },
+      signature: { type: 'string' },
       publicKey: { type: 'string' }
     },
-    required: ['idOnNetwork', 'publicKey'],
+    required: ['idOnNetwork', 'publicKey', 'signature'],
     additionalProperties: false
   })
   @use(verifySignatureBody)
@@ -111,10 +115,10 @@ export class NodeController {
     type: 'object',
     properties: {
       idOnNetwork: { type: 'string' },
-      signature: { type: 'string', nullable: true },
+      signature: { type: 'string' },
       publicKey: { type: 'string' }
     },
-    required: ['idOnNetwork', 'publicKey'],
+    required: ['idOnNetwork', 'publicKey', 'signature'],
     additionalProperties: false
   })
   @use(verifySignatureBody)
