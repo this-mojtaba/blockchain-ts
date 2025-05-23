@@ -151,7 +151,6 @@ export async function bootstrapNode(): Promise<void> {
         await mineBlock(myNode);
       }
     },
-    // 1000 * 60 * 2
-    1000 * 30
+    1000 * 60 * 2
   ); // every 2 minutes
 }
