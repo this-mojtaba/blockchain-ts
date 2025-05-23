@@ -10,7 +10,6 @@ const logger: Logger = LoggerUtil.getLogger();
 
 export function verifyBlockHash(block: IBlock): boolean {
   const transactions = block.transactions as any;
-  // TODO: format same as mine (use array for it, because objects hasen't ordered!)
   const formatedTransactions = formatTransactions(transactions);
 
   let dataToHash = block.previousHash + block.timestamp + formatedTransactions + block.nonce;
@@ -26,7 +25,6 @@ export function verifyBlockHash(block: IBlock): boolean {
 export class BlockchainServiceClass {
   async validateBlock(block: IBlock): Promise<boolean> {
     if (!verifyBlockHash(block)) return false;
-    // TODO:
     const transactions = block.transactions as unknown as ITransaction[];
     if (!(await this.verifyTransactions(transactions))) return false;
 
@@ -83,8 +81,6 @@ export class BlockchainServiceClass {
           status: ITransactionStatus.confirmed
         });
       }
-
-      // TODO: check sender balance
     }
 
     return true;

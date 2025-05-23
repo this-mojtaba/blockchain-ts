@@ -165,7 +165,7 @@ Description: Send a new transaction to the node's mempool.
 
 Request Body:
 
-<pre>```{
+<pre>{
   "publicKey": "string",
   "fromAddress": "string",
   "toAddress": "string",
@@ -173,7 +173,7 @@ Request Body:
   "gasFee": "number",
   "timestamp": "number",
   "signature": "string"
-}```</pre>
+}</pre>
 
 GET /transaction/search Description: Search transactions across the blockchain network.
 
